@@ -5,7 +5,7 @@ import { ChangePasswordDto, CreateUserDto, LoginUserDto, UpdateUserDto } from '.
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '@nestjs/common';
-
+import { GenerarToken } from 'src/utilities/funciones/generar-token/generar-token';
 
 
 @Injectable()
@@ -15,62 +15,57 @@ export class UsersService {
 
     private readonly logger = new Logger(UsersService.name);
 
-
     constructor(
         private poolConexion: DataSource
-    ){
+    ) {
         this.usersRepository = poolConexion.getRepository(User);
     }
 
     public async createUser(createUserDto: CreateUserDto): Promise<User> {
-        try {
-            // Verificar si el usuario o email ya existen
-            const existingUser = await this.usersRepository.findOne({
-                where: [
-                    { username: createUserDto.username },
-                    { email: createUserDto.email }
-                ]
-            });
+    try {
+      // Log para depuración
+      this.logger.log(`Datos recibidos: ${JSON.stringify(createUserDto)}`)
 
-            if (existingUser) {
-                if (existingUser.username === createUserDto.username) {
-                    throw new ConflictException('El usuario ya existe');
-                } else {
-                    throw new ConflictException('El emmail ya esta en uso');
-                }
-            }
+      // Validar que la contraseña existe
+      if (!createUserDto.password) {
+        throw new BadRequestException("La contraseña es obligatoria")
+      }
 
-            // Encriptar la contraseña
-            const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      // Verificar si el usuario o email ya existen
+      const existingUser = await this.usersRepository.findOne({
+        where: [{ username: createUserDto.username }, { email: createUserDto.email }],
+      })
 
-            // Crear nuevo usuario
-            const newUser = this.usersRepository.create({
-                codUser: uuidv4(),
-                username: createUserDto.username,
-                email: createUserDto.email,
-                password: hashedPassword,
-                firstName: createUserDto.firstName,
-                lastName: createUserDto.lastName,
-                profilePicture: createUserDto.profilePicture,
-                bio: createUserDto.bio,
-                role: 'user',
-                rating: 0,
-                totalProblemsSolved: 0,
-                solvedProblems: [],
-                isActive: true
-            });
-
-            return await this.usersRepository.save(newUser);
-        } catch (error) {
-            if (error instanceof ConflictException) {
-                throw error;
-            }
-            this.logger.error(`Error registrando usuario: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('registrando usuario');
+      if (existingUser) {
+        if (existingUser.username === createUserDto.username) {
+          throw new ConflictException("El usuario ya existe")
+        } else {
+          throw new ConflictException("El email ya está en uso")
         }
-    }
+      }
 
-    public async login(loginUserDto: LoginUserDto): Promise<User> {
+      // Encriptar la contraseña
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10)
+
+      // Crear nuevo usuario
+            const newUser = new User (uuidv4(), createUserDto.username, createUserDto.email, hashedPassword, 1,
+                createUserDto.firstName || "", createUserDto.lastName || "", createUserDto.profilePicture || "", createUserDto.bio || "",
+                0, 0, [], true
+            );
+
+      // Guardar el usuario
+      return await this.usersRepository.save(newUser)
+    } catch (error) {
+      this.logger.error(`Error registrando usuario: ${error.message}`, error.stack)
+
+      if (error instanceof BadRequestException || error instanceof ConflictException) {
+        throw error
+      }
+
+      throw new InternalServerErrorException("Error registrando usuario")
+    }
+  }
+    public async login(loginUserDto: LoginUserDto): Promise<{ user: User; accessToken: string }> {
         try {
             const user = await this.usersRepository.findOne({
                 where: { username: loginUserDto.username }
@@ -86,10 +81,16 @@ export class UsersService {
 
             const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
             if (!isPasswordValid) {
-                throw new UnauthorizedException('Invalid credentials');
+                throw new UnauthorizedException('credenciales no son validas');
             }
 
-            return user;
+            const token = GenerarToken.procesarRespuesta(user);
+
+            return {
+                user: user,
+                accessToken: token
+            };
+
         } catch (error) {
             if (error instanceof UnauthorizedException) {
                 throw error;
@@ -216,7 +217,6 @@ export class UsersService {
         }
     }
 
-
     public async changePassword(id: string, changePasswordDto: ChangePasswordDto): Promise<void> {
         try {
             const user = await this.findOne(id);
@@ -273,14 +273,14 @@ export class UsersService {
     public async addSolvedProblem(userId: string, problemId: string): Promise<User> {
         try {
             const user = await this.findOne(userId);
-            
+
             // Verificar si el problema ya está en el array de problemas resueltos
             if (!user.solvedProblems.includes(problemId)) {
                 user.solvedProblems.push(problemId);
                 user.totalProblemsSolved = user.solvedProblems.length;
                 return await this.usersRepository.save(user);
             }
-            
+
             return user;
         } catch (error) {
             if (error instanceof NotFoundException) {
