@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { Role } from 'src/rol/models/entities/role/rol';
 import { User } from 'src/users/models/entities/user/user';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
-
+@Global()
 @Module({
 
     imports: [],
@@ -24,7 +25,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
                         synchronize: true,
                         logging: true,
                         namingStrategy: new SnakeNamingStrategy(),
-                        entities: [User]
+                        entities: [User, Role]
                     });
                     await poolConexion.initialize();
                     console.log('Conexión a la base de datos establecida correctamente' + String(process.env.BASE_DATOS));

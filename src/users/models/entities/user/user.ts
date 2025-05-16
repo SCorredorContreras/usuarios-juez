@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Role } from "src/rol/models/entities/role/rol";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 
-@Entity("user", { schema: "public" })
+@Entity("users", { schema: "public" })
 export class User {
     @PrimaryGeneratedColumn("uuid", { name: "cod_user" })
     public codUser: string;
@@ -27,8 +28,13 @@ export class User {
     @Column({ name: "bio", type: "varchar" })
     public bio: string;
 
-    @Column({ name: "role", type: "varchar", default: "user" })
-    public role: string;
+    @Column({ name: "cod_role", type: "integer", nullable: false , default: 3})
+    public codRole: number;
+
+    @ManyToOne(() => Role, role => role.rolesUsuarios, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+    @JoinColumn([{ name: "cod_role", referencedColumnName: "codRole" }])
+    public rolUsuario: Role;
+
 
     @Column({ name: "rating", type: "integer", default: 0 })
     public rating: number;
@@ -47,11 +53,11 @@ export class User {
         username: string,
         email: string,
         password: string,
+        codR: number,
         firstName?: string,
         lastName?: string,
         profilePicture?: string,
         bio?: string,
-        role: string = "user",
         rating: number = 0,
         totalProblemsSolved: number = 0,
         solvedProblems: string[] = [],
@@ -65,7 +71,7 @@ export class User {
         this.lastName = lastName ?? "";
         this.profilePicture = profilePicture ?? "";
         this.bio = bio ?? "";
-        this.role = role;
+        this.codRole = codR;
         this.rating = rating;
         this.totalProblemsSolved = totalProblemsSolved;
         this.solvedProblems = solvedProblems;
