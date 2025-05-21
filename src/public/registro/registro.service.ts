@@ -74,7 +74,8 @@ export class RegistroService {
     public async login(loginUserDto: LoginUserDto): Promise<{ user: User; accessToken: string }> {
         try {
             const user = await this.usersRepository.findOne({
-                where: { username: loginUserDto.username }
+                where: { username: loginUserDto.username },
+                relations: ["rolUsuario"]
             });
 
             if (!user) {
