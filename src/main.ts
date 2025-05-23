@@ -13,7 +13,7 @@ async function bootstrap() {
   });
 
 
-  let puerto: number = Number(process.env.PUERTO_SERVIDOR);
+  let puerto: number = Number(process.env.SERVER_PORT);
 
   const config = new DocumentBuilder()
     .setTitle('Cats example')
