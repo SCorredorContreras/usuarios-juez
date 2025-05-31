@@ -22,49 +22,50 @@ export class UsersService {
     }
 
     public async createUser(createUserDto: CreateUserDto): Promise<User> {
-    try {
-      // Log para depuración
-      this.logger.log(`Datos recibidos: ${JSON.stringify(createUserDto)}`)
+        try {
+            // Log for debugging
+            //this.logger.log(`Datos recibidos: ${JSON.stringify(createUserDto)}`)
 
-      // Validar que la contraseña existe
-      if (!createUserDto.password) {
-        throw new BadRequestException("La contraseña es obligatoria")
-      }
+            // Make sure that the password exists
+            if (!createUserDto.password) {
+                throw new BadRequestException("Password is required")
+            }
 
-      // Verificar si el usuario o email ya existen
-      const existingUser = await this.usersRepository.findOne({
-        where: [{ username: createUserDto.username }, { email: createUserDto.email }],
-      })
+            // Verify if the user or email already exists
+            const existingUser = await this.usersRepository.findOne({
+                where: [{ username: createUserDto.username }, { email: createUserDto.email }],
+            })
 
-      if (existingUser) {
-        if (existingUser.username === createUserDto.username) {
-          throw new ConflictException("El usuario ya existe")
-        } else {
-          throw new ConflictException("El email ya está en uso")
-        }
-      }
+            if (existingUser) {
+                if (existingUser.username === createUserDto.username) {
+                    throw new ConflictException("User already exists")
+                } else {
+                    throw new ConflictException("EEmail is already in use")
+                }
+            }
 
-      // Encriptar la contraseña
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10)
+            // Encrypt the password
+            const hashedPassword = await bcrypt.hash(createUserDto.password, 10)
 
-      // Crear nuevo usuario
-            const newUser = new User (uuidv4(), createUserDto.username, createUserDto.email, hashedPassword, 1,
+            // Create new user
+            const newUser = new User(uuidv4(), createUserDto.username, createUserDto.email, hashedPassword, 3,
                 createUserDto.firstName || "", createUserDto.lastName || "", createUserDto.profilePicture || "", createUserDto.bio || "",
                 0, 0, [], true
             );
 
-      // Guardar el usuario
-      return await this.usersRepository.save(newUser)
-    } catch (error) {
-      this.logger.error(`Error registrando usuario: ${error.message}`, error.stack)
+            // Save the user
+            return await this.usersRepository.save(newUser)
+        } catch (error) {
+            this.logger.error(`Error while registering user: ${error.message}`, error.stack)
 
-      if (error instanceof BadRequestException || error instanceof ConflictException) {
-        throw error
-      }
+            if (error instanceof BadRequestException || error instanceof ConflictException) {
+                throw error
+            }
 
-      throw new InternalServerErrorException("Error registrando usuario")
+            throw new InternalServerErrorException("Error while registering user")
+        }
     }
-  }
+
     public async login(loginUserDto: LoginUserDto): Promise<{ user: User; accessToken: string }> {
         try {
             const user = await this.usersRepository.findOne({
@@ -72,16 +73,16 @@ export class UsersService {
             });
 
             if (!user) {
-                throw new UnauthorizedException('Credenciales no son validas');
+                throw new UnauthorizedException('Invalid credentials');
             }
 
             if (!user.isActive) {
-                throw new UnauthorizedException('La cuenta del usuario esta desactivada');
+                throw new UnauthorizedException('The user account is deactivated');
             }
 
             const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
             if (!isPasswordValid) {
-                throw new UnauthorizedException('credenciales no son validas');
+                throw new UnauthorizedException('Invalid credentials');
             }
 
             const token = GenerarToken.procesarRespuesta(user);
@@ -95,8 +96,8 @@ export class UsersService {
             if (error instanceof UnauthorizedException) {
                 throw error;
             }
-            this.logger.error(`Error durante login: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error durante login');
+            this.logger.error(`Error during login: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error during login');
         }
     }
 
@@ -104,8 +105,8 @@ export class UsersService {
         try {
             return await this.usersRepository.find();
         } catch (error) {
-            this.logger.error(`Error al buscar usuarios: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error buscando usuarios');
+            this.logger.error(`Error while fetching users: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error while fetching users');
         }
     }
 
@@ -116,7 +117,7 @@ export class UsersService {
             });
 
             if (!user) {
-                throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+                throw new NotFoundException(`User with ID ${id} not found`);
             }
 
             return user;
@@ -124,8 +125,8 @@ export class UsersService {
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            this.logger.error(`Error bucando al usuario: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error buscando usuario');
+            this.logger.error(`Error fetching user: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error fetching user');
         }
     }
 
@@ -136,7 +137,7 @@ export class UsersService {
             });
 
             if (!user) {
-                throw new NotFoundException(`Usuario con el usuario ${username} no encontrado`);
+                throw new NotFoundException(`User with username ${username} not found`);
             }
 
             return user;
@@ -144,8 +145,8 @@ export class UsersService {
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            this.logger.error(`Error buscando al usuario por su username: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error buscando al usuario por su username');
+            this.logger.error(`Error fetching user by username: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error fetching user by username');
         }
     }
 
@@ -153,13 +154,13 @@ export class UsersService {
         try {
             const user = await this.findOne(id);
 
-            // Si se está actualizando el username o email, verificar que no exista otro usuario con ese valor
+            // If updating username or email, check for existing user with that value
             if (updateUserDto.username && updateUserDto.username !== user.username) {
                 const existingUsername = await this.usersRepository.findOne({
                     where: { username: updateUserDto.username }
                 });
                 if (existingUsername) {
-                    throw new ConflictException('Nombre de usuario ya existe');
+                    throw new ConflictException('Username already exists');
                 }
             }
 
@@ -168,16 +169,16 @@ export class UsersService {
                     where: { email: updateUserDto.email }
                 });
                 if (existingEmail) {
-                    throw new ConflictException('Email ya existe');
+                    throw new ConflictException('Email already exists');
                 }
             }
 
-            // Si se está actualizando la contraseña, encriptarla
+            // If updating password, hash it
             if (updateUserDto.password) {
                 updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
             }
 
-            // Actualizar usuario
+            // Update user
             const updatedUser = this.usersRepository.merge(user, updateUserDto);
             return await this.usersRepository.save(updatedUser);
         } catch (error) {
@@ -198,8 +199,8 @@ export class UsersService {
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            this.logger.error(`Error desactivando usuario: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error desactivando usuario');
+            this.logger.error(`Error deactivating user: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error deactivating user');
         }
     }
 
@@ -212,8 +213,8 @@ export class UsersService {
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            this.logger.error(`Error activando usuario: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error activando usuario');
+            this.logger.error(`Error activating user: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error activating user');
         }
     }
 
@@ -221,7 +222,7 @@ export class UsersService {
         try {
             const user = await this.findOne(id);
 
-            // Verificar contraseña actual
+            // Check current password
             const isCurrentPasswordValid = await bcrypt.compare(
                 changePasswordDto.currentPassword,
                 user.password
@@ -231,7 +232,7 @@ export class UsersService {
                 throw new BadRequestException('Current password is incorrect');
             }
 
-            // Actualizar contraseña
+            // Update password
             user.password = await bcrypt.hash(changePasswordDto.newPassword, 10);
             await this.usersRepository.save(user);
         } catch (error) {
@@ -274,7 +275,7 @@ export class UsersService {
         try {
             const user = await this.findOne(userId);
 
-            // Verificar si el problema ya está en el array de problemas resueltos
+            // Check if the problem is already in the array of solved problems
             if (!user.solvedProblems.includes(problemId)) {
                 user.solvedProblems.push(problemId);
                 user.totalProblemsSolved = user.solvedProblems.length;

@@ -18,10 +18,10 @@ export class RegistroController {
       async login(@Body() loginUserDto: LoginUserDto) {
         const response = await this.resgistroService.login(loginUserDto);
     
-        // Extraer el password del objeto user anidado
+        // Extract the password from the nested user object
         const { password, ...userWithoutPassword } = response.user;
     
-        // Devolver la estructura correcta
+        // Return the correct structure
         return {
           user: userWithoutPassword,
           accessToken: response.accessToken

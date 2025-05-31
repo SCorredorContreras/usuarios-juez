@@ -9,19 +9,19 @@ export class AccesoController {
     async inicioSesion(@Body() objUsuario: any) {
         const response = await this.accesoService.inicioSesion(objUsuario);
 
-        // Si inicioSesion ya devuelve { user, accessToken }
+        // If inicioSesion already returns { user, accessToken }
         if (response.user && response.accessToken) {
-            // Extraer el password
+            // Extract the password
             const { password, ...userWithoutPassword } = response.user;
 
-            // Devolver la estructura correcta
+            // Return the correct structure
             return {
                 user: userWithoutPassword,
                 accessToken: response.accessToken
             };
         }
 
-        // Si inicioSesion devuelve otra estructura, simplemente pásala
+        // If inicioSesion returns a different structure, just pass it through
         return response;
     }
 }

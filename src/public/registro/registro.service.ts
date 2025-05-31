@@ -23,37 +23,37 @@ export class RegistroService {
 
     public async createUser(createUserDto: CreateUserDto): Promise<any> {
         try {
-            // Log para depuración
-            this.logger.log(`Datos recibidos: ${JSON.stringify(createUserDto)}`)
+            // Debugging log
+            this.logger.log(`Received data: ${JSON.stringify(createUserDto)}`)
 
-            // Validar que la contraseña existe
+            // Validate that the password exists
             if (!createUserDto.password) {
-                throw new BadRequestException("La contraseña es obligatoria")
+                throw new BadRequestException("Password is required")
             }
 
-            // Verificar si el usuario o email ya existen
+            // Check if the username or email already exists
             const existingUser = await this.usersRepository.findOne({
                 where: [{ username: createUserDto.username }, { email: createUserDto.email }], relations: ["rolUsuario"],
             })
 
             if (existingUser) {
                 if (existingUser.username === createUserDto.username) {
-                    return new HttpException("El usuario ya existe", 406)
+                    return new HttpException("User already exists", 406)
                 } else {
-                    return new HttpException("El email ya está en uso", 409)
+                    return new HttpException("EEmail is already in use", 409)
                 }
             }
 
-            // Encriptar la contraseña
+            // Encrypt the password
             const hashedPassword = await bcrypt.hash(createUserDto.password, 10)
 
-            // Crear nuevo usuario
+            // Create new user
             const newUser = new User(uuidv4(), createUserDto.username, createUserDto.email, hashedPassword, 1,
                 createUserDto.firstName || "", createUserDto.lastName || "", createUserDto.profilePicture || "", createUserDto.bio || "",
                 0, 0, [], true
             );
 
-            // Guardar el usuario
+            // Save the user
             const nuevo = await this.usersRepository.save(newUser) as User;
             const datosUsuario = await this.usersRepository.findOne({
                 where: { codUser: nuevo.codUser }, relations: ["rolUsuario"]
@@ -61,13 +61,13 @@ export class RegistroService {
             const token = GenerarToken.procesarRespuesta(datosUsuario);
             return new HttpException({ "tokenApp": token }, 200);
         } catch (error) {
-            this.logger.error(`Error registrando usuario: ${error.message}`, error.stack)
+            this.logger.error(`Error registering user: ${error.message}`, error.stack)
 
             if (error instanceof BadRequestException || error instanceof ConflictException) {
                 throw error
             }
 
-            throw new InternalServerErrorException("Error registrando usuario")
+            throw new InternalServerErrorException("Error registering user")
         }
     }
 
@@ -79,16 +79,16 @@ export class RegistroService {
             });
 
             if (!user) {
-                throw new UnauthorizedException('Credenciales no son validas');
+                throw new UnauthorizedException('Invalid credentials');
             }
 
             if (!user.isActive) {
-                throw new UnauthorizedException('La cuenta del usuario esta desactivada');
+                throw new UnauthorizedException('User account is deactivated');
             }
 
             const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
             if (!isPasswordValid) {
-                throw new UnauthorizedException('credenciales no son validas');
+                throw new UnauthorizedException('Invalid credentials');
             }
 
             const token = GenerarToken.procesarRespuesta(user);
@@ -102,8 +102,8 @@ export class RegistroService {
             if (error instanceof UnauthorizedException) {
                 throw error;
             }
-            this.logger.error(`Error durante login: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Error durante login');
+            this.logger.error(`Error while login: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Error while login');
         }
     }
 

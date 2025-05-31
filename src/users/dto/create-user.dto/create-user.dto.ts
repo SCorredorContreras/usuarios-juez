@@ -4,7 +4,7 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsString()
     @Length(3, 30)
-    @Matches(/^[a-zA-Z0-9_-]+$/, { message: 'Nombre de usuario solo puede contener letras, numeros, guiones bajos y guiones' })
+    @Matches(/^[a-zA-Z0-9_-]+$/, { message: 'Username can only contain letters, numbers, underscores and hyphens' })
     username: string;
 
     @IsNotEmpty()
@@ -15,7 +15,7 @@ export class CreateUserDto {
     @IsString()
     @Length(8, 100)
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]+$/, { 
-        message: 'Contraseña tiene que contener al menos un letra mayuscula, una minuscula y un numero' 
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
     })
     password: string;
 
@@ -41,7 +41,7 @@ export class UpdateUserDto {
     @IsOptional()
     @IsString()
     @Length(3, 30)
-    @Matches(/^[a-zA-Z0-9_-]+$/, { message: 'Nombre de usuario solo puede contener letras, numeros, guiones bajos y guiones' })
+    @Matches(/^[a-zA-Z0-9_-]+$/, { message: 'Username can only contain letters, numbers, underscores and hyphens' })
     username?: string;
 
     @IsOptional()
@@ -52,7 +52,7 @@ export class UpdateUserDto {
     @IsString()
     @Length(8, 100)
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]+$/, { 
-        message: 'Contraseña tiene que contener al menos un letra mayuscula, una minuscula y un numero' 
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
     })
     password?: string;
 
@@ -92,7 +92,7 @@ export class ChangePasswordDto {
     @IsString()
     @Length(8, 100)
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]+$/, { 
-        message: 'Contraseña tiene que contener al menos un letra mayuscula, una minuscula y un numero' 
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' 
     })
     newPassword: string;
 }

@@ -12,7 +12,7 @@ export class AccesoService {
     private readonly usuarioRepositorio: Repository<User>,
   ) { }
 
-  /* Servicio Inicio de Sesion */
+  /* Login Service */
   async inicioSesion(objUsuario: User): Promise<any> {
     const existe = await this.usuarioRepositorio.findBy({ username: objUsuario.username });
     if (existe.length != 0) {
@@ -22,19 +22,19 @@ export class AccesoService {
         try {
           let datosUsuario = await this.usuarioRepositorio.findOne({ where: { codUser: codigoUsuario }, relations: ["rolUsuario"] });
           if (!datosUsuario) {
-            throw new HttpException("Usuario no encontrado", 404);
+            throw new HttpException("User not found", 404);
           }
 
           const token = GenerarToken.procesarRespuesta(datosUsuario);
           return new HttpException({ "tokenApp": token }, 200);
         } catch (e) {
-          throw new HttpException("Fallo en la verificación del usuario", 400);
+          throw new HttpException("Failed to verify user", 400);
         }
       } else {
-        return new HttpException("Contraseña inválida", 406);
+        return new HttpException("Invalid password", 406);
       }
     } else {
-      return new HttpException("Usuario no existe", 409);
+      return new HttpException("User does not exist", 409);
     }
   }
 }

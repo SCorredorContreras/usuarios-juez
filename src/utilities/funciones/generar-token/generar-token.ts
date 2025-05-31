@@ -4,7 +4,7 @@ import { sign } from 'jsonwebtoken';
 
 export class GenerarToken {
 
-    /*generar token del usuario*/
+    /*Generate user's token*/
 
     public static procesarRespuesta(respuesta: User): string {
 

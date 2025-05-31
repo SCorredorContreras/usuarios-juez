@@ -18,10 +18,10 @@ export class UsersController {
   async login(@Body() loginUserDto: LoginUserDto) {
     const response = await this.usersService.login(loginUserDto);
 
-    // Extraer el password del objeto user anidado
+    // Extract the password from the nested user object
     const { password, ...userWithoutPassword } = response.user;
 
-    // Devolver la estructura correcta
+    // Return the correct structure
     return {
       user: userWithoutPassword,
       accessToken: response.accessToken
