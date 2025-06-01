@@ -103,7 +103,9 @@ export class UsersService {
 
     public async findAll(): Promise<User[]> {
         try {
-            return await this.usersRepository.find();
+            return await this.usersRepository.find({
+                relations: ['rolUsuario']
+            });
         } catch (error) {
             this.logger.error(`Error while fetching users: ${error.message}`, error.stack);
             throw new InternalServerErrorException('Error while fetching users');
