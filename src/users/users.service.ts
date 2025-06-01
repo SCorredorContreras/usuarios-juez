@@ -85,7 +85,7 @@ export class UsersService {
                 throw new UnauthorizedException('Invalid credentials');
             }
 
-            const token = GenerarToken.procesarRespuesta(user);
+            const token = GenerarToken.processResponse(user);
 
             return {
                 user: user,
