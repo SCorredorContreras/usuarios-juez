@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Length, Matches } from "class-validator";
+import { IsBoolean, IsEmail, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator";
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -138,14 +138,15 @@ export class UpdateUserDto {
     bio?: string;
 
     @ApiProperty({
-        description: 'User role (optional)',
+        description: 'User role code (optional)',
         required: false,
-        example: 'user'
+        example: 2,
+        enum: [1, 2, 3]
     })
     @IsOptional()
-    @IsString()
-    @Matches(/^(user)$/)
-    role?: string;
+    @IsNumber()
+    @IsIn([1, 2, 3])
+    codRole?: number;
 
     @ApiProperty({
         description: 'Account active status (optional)',
